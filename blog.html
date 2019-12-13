@@ -58,9 +58,100 @@ Computer Science, Game Programming.
 	<!--Homepage Content-->
 	<div class="col-sm-8 center">
 		<h2>Blog Post #1: Predictive Physics (Projectiles)</h2>
-		<div class ="coolguyimage">Image</div>
+		
 		<p>December 9th, 2019</p>
-		<p>Bruhjectiles... 'nuff said. </p>
+		<p>
+			You know those games at carnivals where you have to throw a softball at a moving target, like a cutout of a rubber duck or an alien or something? 
+			Before you throw the ball, do you calculate the velocity of the target, take into account the earth’s gravity, and adjust the velocity and trajectory 
+			of your throw based off of that? Well... yes, but it’s likely not something that comes as a conscious effort on your part, or really requires an in-depth 
+			understanding of the mathematics and physics that are involved in the process. Computers, on the other hand, aren’t as sophisticated. 
+			In order to realistically portray an artificially intelligent Non-Player Character in the game you’re developing, you’re going to need to put in the algorithms for Predictive Physics. 
+		</p>
+		<p>
+			Whether its a Single-Player Action Game, a multiplayer First-Person Shooter, a Massively Online Battle Arena, or even a sports game like Hockey or Football,
+			realistic behavior and physics will be what separates an “artificially intelligent” NPC from an NPC whose football throw/gun fire/grenade toss gets posted on 
+			Twitter with a caption that reads “?????”. Any game in which some sort of projectile or object needs to make contact with a moving target will need these kinds of algorithms. 
+			One easy way to visualize this interception is to imagine a series of circles emanating from both the turret and the target (at its current position). 
+			Those spaces where the circles touch each other would be the most optimal places to fire. 
+			<a href="https://stackoverflow.com/questions/37250215/intersection-of-two-moving-objects-with-latitude-longitude-coordinates">One user on StackOverflow</a> visualized this beautifully:
+		</p>
+		<img src="https://i.stack.imgur.com/MAXyO.png">
+		<p>
+			I’ll explain the concept and the mathematics behind it using my own code as an example.
+		</p>
+		<img src="../GameScreenshotExplained2.png">
+		<p>
+			In my game, you control the black dot by clicking on the screen, and the black arrow will follow you around. 
+			The red dot is a turret, placed by pressing the ‘t’ key, which will activate when the player comes within its range 
+			(approximately 150 pixels squared). Upon activation, it will predict the path of the player based on their current position and velocity 
+			(speed and direction) and fire a projectile (both of whose paths are illustrated by the blue arrows,) which will intercept the player if 
+			do not move off of their current path. The red Plus Shape in the bottom corner is a randomly-moving health kit, which is irrelevant to this demonstration. 
+		</p>
+		<img src="../GameScreenshotExplained.png">
+		<p>
+			In this picture, as you can see, the green arrow has been fired in the direction that the black arrow would follow if it continued in its same path. 
+			In the event the fired projectile misses, it will disappear in three seconds and the turret will be ready to fire again. 
+			The targeting mathematics are mostly handled in the TurretOnState, which is a state for the Turret to be in. 
+			Should the player enter an inactive turret’s range, the On State will be triggered, and the projectile will be fired. 
+		</p>
+		<p>
+			Let’s take a look at the code:
+
+		</p>
+		<p>
+			First, we need to get the necessary information prepared. 
+			We need the Projectile Speed, the Target’s Speed, the Distance between the Turret and the Target, and the Target Velocity.
+		</p>
+		<img src="../CodeSample1.png">
+		<p>
+			Things get a little bit easier if the projectile and the target have the same speed. 
+		</p>
+		<img src="../CodeSample2.png">
+		<p>
+			Otherwise, use the Quadratic Formula to save time. The ‘x’ in our case is t, or Time it will take for the projectile to reach its mark.
+		</p>
+		<img src="https://cdn.kastatic.org/googleusercontent/nI2riiPBcl9hZ22KKdYZGFmsVNhcKLiuwPly9l1tU5BMaqcOs9bfPKRyoGAFgK-PNpc-c7x_tNuskGdzawvy_Pza">
+		<img src="../CodeSample3.png">
+		<p>
+			Since, obviously, time flows in one direction (forward), and realistically speaking, things take time to move places, it wouldn’t make much 
+			sense for our t to be either equal to or lower than Epsilon 0. Since the quadratic formula has both +/- possibilities, we’ll take the smaller 
+			of the two, provided it is not equal to or lower than Epsilon 0. (Epsilon Zero is “the permittivity of free space”, a somewhat hard concept to 
+			describe, but in this case, we’re using it as an absolute smallest baseline of how much time can be taken to move from one place to another). 
+			It is also entirely possible that no solution may be found. Perhaps the target is moving incredibly fast and the projectile could not catch up. 
+			In this case, the time would be set to 1 second, telling the turret to fire where the player will be in one second (which likely will not hit), 
+			and a flag is set informing the final piece of the code to make a special case for the unachievable target. 
+		</p>
+		<p>
+			Finally, we calculate the velocity! To do that, take the player’s speed, and add the negative of the difference between the player’s starting 
+			location and the turret over the time it would take to reach the destination. If the valid solution was not found and we’re stuck with the guess 
+			value of one second, you can make this mistake look smoother and less suspicious by multiplying the normalized velocity with the projectile’s speed, 
+			which should cause the turret to shoot in a generally correct direction.
+		</p>
+		<img src="../CodeSample4.png">
+		<p>
+			Now, we have the velocity of the projectile! Your projectile won’t really be ‘seeking’ a specific location like a unit would, but instead it is just 
+			going in the direction you tell it to, until it either makes contact with the player or fizzles out after three seconds. 
+		</p>
+		<p>
+		Should your game account for gravity, that would be taken into account after this. While my specific implementation of Predictive Projectile Physics does 
+		not take gravity into account, being a two-dimensional top-down game, all you would have to do is subtract the gravity’s compensation from your projectile’s 
+		velocity. Kain Shin, game developer and generally “cool dude”, in his code for predicting aim, implements this quite well by granting the projectile additional 
+		acceleration upwards or downwards, depending on gravity’s force on it. You can view his code <a href="http://ringofblades.com/Blades/Code/PredictiveAim.cs">here</a>.
+		</p>
+		<p>
+			Properly predicting your projectile’s physics can mean the difference between a  good-looking, realistic AI and a distractingly misbehaving AI. 
+			This sort of technique is easily adaptable to both 3D and 2D games, and has many more uses than just projectiles. One really interesting use for 
+			Predictive Physics I have read about in Artificial Intelligence For Games, Second Edition (written by Ian Millington and John Funge) is their 
+			application in adjusting for network delays or disruptions. The network could adjust the positions of players they were unable to keep track of 
+			during network lag by predicting where they would end up if they continued on their path and moving them there, subtly (or abruptly) moving them 
+			back to the correct position once the connection has been re-established. 
+		</p>
+		<pre>
+			Additional Resources:
+			https://www.gamasutra.com/blogs/KainShin/20090515/83954/Predictive_Aim_Mathematics_for_AI_Targeting.php
+			http://jaran.de/goodbits/2011/07/17/calculating-an-intercept-course-to-a-target-with-constant-direction-and-velocity-in-a-2-dimensional-plane/
+			https://www.codeproject.com/Articles/19310/Hitting-a-Moving-Target-The-Missile-Guidance-Syste
+		</pre>
 	</div>
 </body>
 </html>

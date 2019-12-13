@@ -13,6 +13,8 @@ body {
 }
 
 .ul {
+	background-color: #e6f2ff
+	border: 1px solid #e7e7e7;
 	position: -webkit-sticky;
 	position: sticky;
 	top: 0;
